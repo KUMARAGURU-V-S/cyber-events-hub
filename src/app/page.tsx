@@ -27,8 +27,8 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  const eventTypes = ["All", "CTF", "Hackathon"];
-  const eventSources = ["All", "CTFtime", "Unstop", "Devpost"];
+  const eventTypes = ["All", "CTF", "Hackathon", "Conference", "Meetup"];
+  const eventSources = ["All", "CTFtime", "Unstop", "Devpost", "FOSS Chennai", "Developers.events"];
   
   const filteredEvents = events.filter(e => {
     if (typeFilter !== "All" && e.type !== typeFilter) return false;

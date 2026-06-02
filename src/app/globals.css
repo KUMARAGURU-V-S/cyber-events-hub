@@ -275,6 +275,8 @@ button {
 
 .event-type.ctf { color: var(--accent-danger); }
 .event-type.hackathon { color: var(--accent-secondary); }
+.event-type.conference { color: var(--accent-success); }
+.event-type.meetup { color: #f59e0b; } /* Amber/Yellow for Meetups */
 
 .event-title {
   font-size: 1.25rem;

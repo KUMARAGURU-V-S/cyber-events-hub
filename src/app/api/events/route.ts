@@ -10,7 +10,7 @@ export interface CyberEvent {
   url: string;
   startDate: string;
   endDate: string;
-  type: 'CTF' | 'Hackathon' | 'Conference';
+  type: 'CTF' | 'Hackathon' | 'Conference' | 'Meetup';
   tags: string[];
   source: string;
 }
@@ -130,6 +130,74 @@ export async function GET() {
     }
   } catch (error) {
     console.error("Devpost fetch error:", error);
+  }
+
+  try {
+    // 4. Fetch FOSS Chennai Communities Events (Meetups)
+    const fossRes = await fetch('https://raw.githubusercontent.com/fossuchennai/communities/main/src/data/events.json', { headers, signal: AbortSignal.timeout(8000) });
+    if (fossRes.ok) {
+      const fossData = await fossRes.json();
+      if (Array.isArray(fossData)) {
+        fossData.forEach((event: any, i: number) => {
+          const title = event.eventName || '';
+          const desc = event.eventDescription || '';
+          const community = event.communityName || '';
+          
+          const searchStr = ` ${title} ${desc} ${community} `.toLowerCase();
+          const isCyber = /(cyber|security|infosec|forensic|osint|[^a-z]ctf[^a-z]|[^a-z]pwn[^a-z]|crypto|reverse|owasp|defcon|hacker|nullcon)/i.test(searchStr);
+          
+          if (isCyber) {
+            events.push({
+              id: `foss-${i}`,
+              title: title,
+              description: desc || 'Cybersecurity Meetup',
+              url: event.eventLink || '#',
+              startDate: event.eventDate ? new Date(event.eventDate).toISOString() : new Date().toISOString(),
+              endDate: event.eventDate ? new Date(event.eventDate).toISOString() : new Date().toISOString(),
+              type: 'Meetup',
+              tags: getTags(title, desc),
+              source: 'FOSS Chennai'
+            });
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("FOSS Chennai fetch error:", error);
+  }
+
+  try {
+    // 5. Fetch Developers.events (Conferences)
+    const devEventsRes = await fetch('https://developers.events/all-events.json', { headers, signal: AbortSignal.timeout(8000) });
+    if (devEventsRes.ok) {
+      const devEventsData = await devEventsRes.json();
+      if (Array.isArray(devEventsData)) {
+        const now = new Date().getTime();
+        devEventsData.forEach((event: any, i: number) => {
+          if (!event.date || event.date[1] < now) return; // Skip past events
+          
+          const title = event.name || '';
+          const searchStr = ` ${title} `.toLowerCase();
+          const isCyber = /(cyber|security|infosec|forensic|osint|crypto|reverse|hacker|bsides|defcon|black hat|owasp)/i.test(searchStr);
+          
+          if (isCyber) {
+            events.push({
+              id: `devevents-${i}`,
+              title: title,
+              description: `Location: ${event.location || 'Unknown'}. Tech conference focused on security.`,
+              url: event.hyperlink || '#',
+              startDate: new Date(event.date[0]).toISOString(),
+              endDate: new Date(event.date[1]).toISOString(),
+              type: 'Conference',
+              tags: getTags(title, ''),
+              source: 'Developers.events'
+            });
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Developers.events fetch error:", error);
   }
 
   // Sort by start date
